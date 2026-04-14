@@ -18,7 +18,6 @@ jobs:
 
       - name: Installer les dépendances
         run: pip install -r requirements.txt
-
       - name: Lancer les tests avec couverture
         run: |
           pytest --cov=src \
