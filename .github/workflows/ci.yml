@@ -32,7 +32,7 @@ jobs:
 
       - name: Analyse sécurité Bandit
         run: bandit -r src/ -ll
-        
+
       - name: Analyse sécurité Semgrep
         run: semgrep --config auto --error src/
 
