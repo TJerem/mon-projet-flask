@@ -19,7 +19,7 @@ def hello(name):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
 
 
 @app.route("/add/<int:a>/<int:b>")
