@@ -1,0 +1,16 @@
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", # erreurs pycodestyle
+    "W", # warnings pycodestyle
+    "F", # erreurs pyflakes
+    "I", # tri des imports (isort)
+    "B", # bugbear (bugs courants)
+    "UP", # pyupgrade (modernisation)
+]
