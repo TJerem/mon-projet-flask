@@ -37,3 +37,9 @@ def test_add(client):
     response = client.get("/add/3/5")
     assert response.status_code == 200
     assert response.get_json()["result"] == 8
+
+
+def test_about(client):
+    response = client.get("/about")
+    assert response.status_code == 200
+    assert response.get_json()["version"] == "1.0"
