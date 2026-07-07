@@ -266,3 +266,189 @@ Pour cette analyse, nous avons choisi le projet populaire **FastAPI**.
   * `0.137.0` (MINOR) : Ajout de fonctionnalités de validation de schémas.
 * **Tags et SemVer :** Oui, les versions de FastAPI suivent strictement le standard SemVer (bien que le numéro de version majeure reste à `0` pour indiquer que le framework continue d'évoluer, les composants mineurs et patchs suivent les règles standards).
 * **Automatisation et Outils :** FastAPI utilise des scripts d'automatisation personnalisés combinés avec des GitHub Actions pour générer le changelog à partir des labels des PRs fusionnées, et automatiser les releases sur GitHub et la publication des paquets sur PyPI.
+
+# Compte-Rendu de TP 7 — Documentation projet
+
+---
+
+## Partie 0 — État des lieux
+
+### Question 1 : Qu'est-ce que le concept « Documentation as Code » ? Quels avantages ?
+
+Le concept de **« Documentation as Code » (Docs-as-Code)** consiste à traiter la documentation avec les mêmes méthodes, workflows et outils que le code source d'un logiciel. Cela signifie :
+* Écrire la documentation dans un langage de balisage léger (comme **Markdown**, AsciiDoc ou reStructuredText).
+* Stocker les fichiers de documentation dans le même dépôt de contrôle de version (**Git**) que le code source.
+* Soumettre les modifications via des **Pull Requests** avec revue de code par les pairs.
+* Automatiser la construction, la validation (liens morts, orthographe) et la publication du site de documentation via des pipelines d'**Intégration et Déploiement Continus (CI/CD)**.
+
+**Avantages :**
+1. **Alignement et synchronisation :** La documentation évolue dans les mêmes branches et commits que le code associé, évitant ainsi d'avoir une documentation obsolète par rapport à l'application.
+2. **Revue et collaboration :** Les relecteurs peuvent valider et commenter les changements de la documentation directement dans la PR de code, garantissant la précision technique.
+3. **Automatisation :** Publication instantanée et automatique (ex: sur GitHub Pages ou Read the Docs) à chaque fusion sur la branche principale, sans aucune action manuelle.
+4. **Historisation complète :** Git conserve l'historique complet de qui a écrit quoi, quand, et pourquoi, facilitant le suivi et les retours en arrière.
+
+---
+
+## Partie 1 — README professionnel
+
+### Question 2 : Quelles sont les sections essentielles d'un bon README ? Pourquoi un tableau des routes API ?
+
+**Sections essentielles d'un bon README :**
+1. **Titre et Badges :** Présentation claire du nom du projet accompagnée de badges dynamiques de statut (CI/CD, couverture de code, version de release, licence, versions technologiques).
+2. **Description courte :** Une à deux phrases résumant le but du projet (la proposition de valeur).
+3. **Table des matières :** Pour faciliter la navigation si le README est long.
+4. **Prérequis et Installation / Lancement :** Les étapes simples, pas-à-pas, pour cloner, configurer et exécuter l'application localement.
+5. **Usage / Exemples :** Comment interagir avec le projet (lignes de commande, requêtes type, etc.).
+6. **Documentation :** Un lien vers le site de documentation complet pour approfondir.
+7. **Contribution & Licence :** Référence aux guides de contribution et à la licence légale du projet.
+
+**Pourquoi un tableau des routes API ?**
+Un tableau des routes API offre une vue d'ensemble immédiate et structurée de ce que propose le service web. Il permet aux développeurs (internes ou externes consommant l'API) de comprendre en un coup d'œil quelles sont les ressources exposées, les méthodes HTTP acceptées (GET, POST, etc.) et le rôle de chaque point d'accès, sans avoir à fouiller dans le code source de l'application.
+
+---
+
+## Partie 2 — Fichiers de gouvernance
+
+### Question 3 : Pourquoi un projet open source doit-il avoir une licence ? Que se passe-t-il sans licence ?
+
+**Pourquoi un projet doit-il avoir une licence ?**
+Une licence définit légalement les droits et les conditions sous lesquels d'autres personnes peuvent utiliser, copier, modifier, distribuer et contribuer au code source du projet. Dans le monde de l'open source, elle clarifie les autorisations de réutilisation (ex: commerciale, éducative) et protège les auteurs originaux contre d'éventuelles poursuites de responsabilité (clause "NO WARRANTY").
+
+**Que se passe-t-il sans licence ?**
+Sans licence explicite, le droit d'auteur par défaut (droit de propriété intellectuelle classique) s'applique. Cela signifie que l'auteur conserve tous les droits exclusifs sur son code : **personne n'a légalement le droit d'utiliser, de modifier, de redistribuer ou de copier le code**, même s'il est visible publiquement sur un dépôt GitHub. Le projet est alors légalement inexploitable par la communauté, ce qui va à l'encontre du principe même de l'open source.
+
+---
+
+## Partie 3 — Templates d'issues et PR
+
+### Question 4 : Intérêt des templates d'issues et de PR ? Que se passe-t-il sans ?
+
+**Intérêt des templates :**
+* **Standardisation :** Ils forcent les contributeurs à fournir les informations structurées indispensables pour comprendre le besoin (contexte technique, étapes de reproduction pour un bug, motivation pour une fonctionnalité, checklist de validation avant fusion).
+* **Gain de temps :** Réduit les allers-retours inutiles entre mainteneurs et contributeurs pour demander des détails manquants (ex: "quelle est ta version de Python ?").
+* **Qualité des contributions :** Guide le contributeur dans la validation de son propre travail (grâce à la checklist de PR).
+
+**Que se passe-t-il sans templates ?**
+Sans ces templates, les issues et PRs soumises sont souvent vides, imprécises ou inexploitables (ex: une issue disant simplement "ça marche pas !"). Les mainteneurs perdent énormément de temps à demander des détails de reproduction, ralentissant le cycle de résolution des bugs et d'intégration des nouvelles fonctionnalités.
+
+---
+
+## Partie 4 — Site de documentation avec MkDocs
+
+### Question 5 : Avantages d'un site MkDocs par rapport à un simple README ?
+
+1. **Richesse de la structure :** Permet d'organiser le contenu sur plusieurs pages thématiques distinctes (Guide d'installation, Spécifications API, Architecture, FAQ, Changelog) au lieu d'avoir un fichier README unique et surchargé.
+2. **Navigation et recherche intégrées :** Génère un menu de navigation latéral fluide et une barre de recherche textuelle instantanée en local, ce qui améliore considérablement l'expérience utilisateur.
+3. **Esthétique et Personnalisation :** Offre des thèmes modernes (comme Material for MkDocs) avec coloration syntaxique adaptative (mode sombre/clair), gestion avancée des blocs de code, des tableaux et des diagrammes interactifs.
+4. **Extensibilité :** Possibilité d'ajouter des extensions Markdown puissantes (ex: support natif des diagrammes Mermaid, info-bulles, onglets, génération automatique d'API doc à partir des docstrings de code).
+
+### Question 6 : Qu'est-ce que MkDocs Material ? Citez 2 alternatives.
+
+**MkDocs Material (`mkdocs-material`) :**
+C'est un thème extrêmement populaire et perfectionné pour MkDocs, basé sur les directives du Material Design de Google. Il fournit une interface responsive hautement soignée, un support de recherche instantanée, un sélecteur de thèmes (sombre/clair), une gestion avancée des icônes et de nombreuses fonctionnalités de mise en page pour la documentation technique.
+
+**Deux alternatives à MkDocs + Material :**
+1. **Docusaurus (par Meta) :** Un outil basé sur React, très utilisé pour les gros sites de documentation avec gestion de versions et de traductions intégrée.
+2. **Sphinx (historique en Python) :** Particulièrement adapté pour la génération automatique de documentation de code Python, très configurable via reStructuredText ou Markdown.
+
+---
+
+## Partie 5 — Déploiement automatique sur GitHub Pages
+
+### Question 7 : Expliquez le filtre paths du workflow. Pourquoi ne pas déployer la doc à chaque push ?
+
+**Explication du filtre `paths` :**
+Dans le workflow GitHub Actions `docs.yml`, la section :
+```yaml
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+```
+indique que le workflow de documentation ne doit se déclencher **que si** des fichiers situés sous le dossier `docs/` ou le fichier de configuration `mkdocs.yml` ont été modifiés dans le commit poussé.
+
+**Pourquoi ne pas déployer la doc à chaque push ?**
+Déployer le site à chaque commit de code (par exemple lors de la modification d'un test Python ou d'une route API) serait inefficace et coûteux en ressources. Cela gaspillerait des minutes de calcul de runners GitHub Actions pour reconstruire et republier un site de documentation identique à la version précédente. Le filtre `paths` limite l'exécution du workflow aux seuls moments pertinents.
+
+### Question 8 : Qu'est-ce que GitHub Pages ? Citez 2 alternatives pour héberger un site statique.
+
+**GitHub Pages :**
+C'est un service d'hébergement de site web statique fourni gratuitement par GitHub. Il permet de publier des sites web directement à partir d'un dépôt Git, en compilant des fichiers HTML, CSS et JavaScript ou en servant le dossier de build généré par un générateur de site statique (comme MkDocs ou Jekyll).
+
+**Deux alternatives pour héberger un site statique :**
+1. **Netlify :** Un service cloud spécialisé dans le déploiement de sites statiques et de projets Jamstack avec intégration Git continue.
+2. **Vercel :** Une plateforme d'hébergement optimisée pour les frameworks front-end et les sites statiques avec déploiements instantanés.
+
+---
+
+### Question 9 : Votre projet est complet. Décrivez tous les éléments de documentation mis en place et leur rôle.
+
+Le projet dispose désormais d'une documentation complète et structurée répartie sur plusieurs niveaux :
+1. **`README.md` (Vitrine d'entrée) :** Fournit les badges de statut, une présentation rapide du projet, les instructions d'installation immédiates pour démarrer et le tableau simplifié des routes API.
+2. **`CONTRIBUTING.md` (Guide de collaboration) :** Explique la démarche à suivre pour soumettre des modifications et détaille les conventions de code (Conventional Commits, Black, Ruff, couverture de tests).
+3. **`LICENSE` (Cadre juridique) :** Licence MIT définissant l'autorisation légale d'utilisation et de modification du code.
+4. **`CODE_OF_CONDUCT.md` (Charte de vie communautaire) :** Code de conduite Contributor Covenant assurant un espace de contribution sain, respectueux et inclusif.
+5. **Templates d'issues & PR (`.github/` - Standardisation) :** Formulaires pré-remplis pour cadrer les retours de bugs, demandes de fonctionnalités et checklists de Pull Requests.
+6. **Docstrings Python (Documentation interne) :** Commentaires normés dans [app.py](file:///home/jerem/mon-projet-flask/src/app.py) documentant le rôle, les paramètres et les retours de chaque route pour le développeur.
+7. **Site MkDocs (Documentation utilisateur et architecture en ligne) :**
+   * `index.md` : Accueil et description de l'usine logicielle.
+   * `api.md` : Détails enrichis et exemples JSON des routes API.
+   * `architecture.md` : Présentation technique, choix SecOps et schéma Mermaid interactif du pipeline CI/CD.
+   * `contributing.md` : Intégration du guide de contribution pour les développeurs.
+8. **Workflow GitHub Actions (`docs.yml` - Automatisation) :** Construit et déploie le site MkDocs sur GitHub Pages à chaque modification.
+
+---
+
+## Partie 6 — Recherche autonome
+
+### Question 10 : Montrez le code Mermaid de votre diagramme et une capture du rendu. Quel type de diagramme et pourquoi ? Indiquez la source.
+
+**Code Mermaid utilisé dans `docs/architecture.md` :**
+```mermaid
+graph TD
+    A[Développeur: Commit / Push] --> B(Workflow CI - ci.yml)
+
+    subgraph CI_Pipeline [Workflow CI : Qualité & Tests]
+        B --> C[Qualité : Black & Ruff]
+        B --> D[Sécurité : Bandit & Semgrep]
+        B --> E[Tests : Pytest & Couverture >= 70%]
+    end
+
+    A --> F(Workflow CD - release.yml)
+
+    subgraph CD_Pipeline [Workflow CD : Release & Déploiement]
+        F --> G[Conventional Commits & release-please]
+        G --> H{Release PR fusionnée ?}
+        H -- Oui --> I[Création Tag Git SemVer vX.Y.Z]
+        I --> J[Job : deploy-release]
+        J --> K[Build Image Docker Multi-stage]
+        K --> L[Push sur Artifact Registry europe-west1]
+        L --> M[Déploiement sur Google Cloud Run]
+    end
+```
+
+**Type de diagramme et justification :**
+Il s'agit d'un **Flowchart (diagramme de flux) orienté du haut vers le bas (`graph TD`)**. Ce type de diagramme est le plus adapté pour représenter un pipeline CI/CD car il modélise de façon séquentielle les étapes successives d'exécution, les regroupements logiques sous forme de sous-graphes (les étapes de CI vs les étapes de CD), ainsi que les branchements conditionnels (comme la décision humaine de fusionner la PR de release).
+
+**Source :**
+Le diagramme a été écrit de manière autonome en s'appuyant sur la syntaxe officielle Mermaid pour documenter le déroulement logique des workflows définis dans les fichiers `ci.yml` et `release.yml`.
+
+---
+
+### Question 11 : Analysez la documentation d'un projet reconnu : structure, outils, ce qui la rend efficace. Une pratique à reprendre ?
+
+Nous analysons la documentation de **FastAPI** (site officiel : [https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)).
+
+* **Outils :** FastAPI utilise également **MkDocs** et le thème **Material for MkDocs**, personnalisé à l'aide de plugins spécifiques.
+* **Structure :** Elle s'articule autour d'une courbe d'apprentissage très progressive :
+  1. *Tutorial - User Guide :* Introduction pas-à-pas couvrant 90% des cas d'utilisation courants.
+  2. *Advanced User Guide :* Fonctionnalités complexes pour des besoins avancées.
+  3. *Reference - API docs :* La documentation automatique des classes et fonctions.
+  4. *About / Help :* Explications théoriques et guide de contribution.
+* **Ce qui la rend efficace :**
+  - **Exemples de code interactifs et typés :** Chaque page contient des exemples de code réels avec des onglets permettant de voir différentes manières d'écrire la fonction (selon la version de Python).
+  - **Traduction communautaire :** Le projet dispose d'une gestion multilingue exemplaire basée sur des contributions Git régulières, permettant d'avoir une documentation complète et à jour dans de nombreuses langues (y compris le français).
+  - **Intégration d'API interactive :** L'API auto-génère sa propre documentation interactive Swagger UI, permettant de tester les routes directement depuis le navigateur.
+* **Une pratique à reprendre :**
+  L'utilisation d'onglets pour présenter les alternatives de code (par exemple, montrer une commande avec `Docker` classique puis avec `Docker Compose`) et l'inclusion de captures d'écran animées/interactives pour guider visuellement l'utilisateur dans l'installation.
