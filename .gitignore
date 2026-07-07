@@ -10,4 +10,4 @@ coverage-report/
 .DS_Store
 audit-report.json
 coverage-report/
-.pytest_cache/
+site/
