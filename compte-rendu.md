@@ -144,3 +144,125 @@ Pour s'assurer que l'image construite est pleinement opérationnelle (qu'elle d�
     *   Taille image multi-stage (optimisée) : **211 Mo**
     *   Gain d'espace : **541 Mo (réduction de ~72%)**
 *   **Lien vers la documentation consultée :** [Docker Multi-stage builds documentation](https://docs.docker.com/build/building/multi-stage/)
+
+# Compte-Rendu de TP 6 — Gestion des artefacts
+
+---
+
+## Partie 0 — État des lieux
+
+### Question 1 : Qu'est-ce qu'un artefact dans le contexte d'une usine logicielle ? Donnez 3 exemples d'artefacts différents.
+
+Dans le contexte d'une usine logicielle, un **artefact** est un fichier généré, compilé ou produit automatiquement par le pipeline CI/CD (les étapes de build, de test ou d'empaquetage). Cet objet est généralement stocké de manière durable et immuable dans un registre ou un gestionnaire d'artefacts pour être déployé, distribué ou réutilisé plus tard.
+
+*Exemples d'artefacts différents :*
+1. **Une image de conteneur (ex: Image Docker)** publiée sur un registre d'images (comme GHCR, Artifact Registry ou Docker Hub) prête à être déployée.
+2. **Un paquet de bibliothèque redistribuable (ex: fichier `.whl` Python sur PyPI, ou package npm sur npmjs)** prêt à être installé comme dépendance.
+3. **Un rapport de qualité ou de couverture de code (ex: fichier HTML/JSON généré par pytest-cov ou SonarQube)** archivé pour archivage ou audit.
+
+---
+
+## Partie 1 — Multi-tagging des images Docker
+
+### Question 2 : Pourquoi tagger une image avec plusieurs tags (SHA complet, SHA court, latest) ? Dans quel cas utilise-t-on chacun ?
+
+Le multi-tagging offre à la fois traçabilité, flexibilité de développement et sécurité de production :
+* **SHA complet (hash Git de 40 caractères) :** Fournit un identifiant unique, immuable et non ambigu pour chaque commit. On l'utilise principalement pour le déploiement en production afin de garantir que la version exacte du code validée en CI/CD est celle qui tourne sur les serveurs, évitant toute confusion.
+* **SHA court (7 caractères) :** Plus lisible et compact que le SHA complet. On l'utilise lors des opérations manuelles de débogage ou d'administration (par exemple pour lister, inspecter ou tirer une image rapidement en ligne de commande : `docker pull image:sha-abc1234`).
+* **latest :** Pointeur mobile pointant vers l'image la plus récente construite sur la branche principale (`main`). On l'utilise uniquement en environnement de développement local ou de staging pour simplifier les tests (pas besoin de changer de tag à chaque commit), mais il est fortement proscrit en production en raison de son manque d'immuabilité.
+
+---
+
+## Partie 2 — Versioning sémantique (SemVer)
+
+### Question 3 : Expliquez le versioning sémantique (SemVer). Pour chaque cas, indiquez si c'est un changement MAJOR, MINOR ou PATCH : ajout d'une route, correction d'un bug, changement du format de réponse JSON.
+
+Le versioning sémantique (SemVer) est un standard de numérotation de version sous le format `MAJOR.MINOR.PATCH` (ex: `1.4.2`), où chaque nombre s'incrémente selon l'impact de la modification sur l'API publique :
+* **PATCH** est incrémenté pour les corrections de bugs rétrocompatibles.
+* **MINOR** est incrémenté pour l'ajout de nouvelles fonctionnalités rétrocompatibles.
+* **MAJOR** est incrémenté pour des modifications majeures introduisant des ruptures de compatibilité ascendante (breaking changes).
+
+*Classification des cas demandés :*
+* **Ajout d'une route :** Changement **MINOR** (nouvelle fonctionnalité qui ne casse pas l'existant).
+* **Correction d'un bug :** Changement **PATCH** (correctif rétrocompatible).
+* **Changement du format de réponse JSON :** Changement **MAJOR** (rompt la compatibilité avec les clients existants qui consomment l'API, nécessitant une mise à jour de leur côté).
+
+### Question 4 : Quelle est la différence entre un tag Git léger (git tag v1.0) et un tag annoté (git tag -a v1.0 -m "...") ?
+
+* **Tag Git léger (Lightweight tag) :** C'est un simple pointeur (une référence) vers un commit spécifique, similaire à une branche qui ne bougerait pas. Il ne contient aucune métadonnée supplémentaire.
+* **Tag Git annoté (Annotated tag) :** C'est un objet Git complet stocké en base de données. Il contient le nom de l'auteur du tag, son adresse e-mail, la date de création du tag, une signature GPG optionnelle et un message d'annotation (fourni avec `-m`). C'est le type de tag recommandé pour marquer officiellement les releases de production en raison de sa traçabilité et de sa pérennité.
+
+---
+
+## Partie 3 — Releases GitHub automatisées
+
+### Question 5 : Comment release-please détermine-t-il le numéro de version à partir des commits ? Quel est le lien avec les Conventional Commits ?
+
+`release-please` utilise l'historique des messages de commit basés sur le standard **Conventional Commits** (ex: `feat: ...`, `fix: ...`, `feat!: ...` ou `BREAKING CHANGE: ...`) pour analyser le type de changement effectué depuis la dernière release :
+* Si des commits de type `fix:` sont trouvés, `release-please` incrémente le numéro de **PATCH** (ex: `1.0.0` -> `1.0.1`).
+* Si des commits de type `feat:` sont trouvés, il incrémente le numéro de **MINOR** (ex: `1.0.0` -> `1.1.0`).
+* Si un point d'exclamation ou la mention `BREAKING CHANGE:` est présente dans un commit (ex: `feat!: ...`), il incrémente le numéro de **MAJOR** (ex: `1.0.0` -> `2.0.0`).
+
+### Question 6 : Quel est l'avantage d'automatiser les releases plutôt que de les créer manuellement ?
+
+L'automatisation offre plusieurs avantages majeurs :
+* **Fiabilité et consistance :** Élimine le risque d'erreur humaine (comme un mauvais tag, un oubli de mise à jour de version dans `pyproject.toml`, ou des releases désynchronisées).
+* **Génération automatique du Changelog :** Rassemble de façon claire et immédiate la liste de toutes les nouveautés, correctifs et breaking changes apportés par la version, sans rédaction manuelle.
+* **Gain de temps :** Le développeur a simplement besoin d'écrire des commits structurés, et le reste du flux de livraison (tagging, changelog, publication, déploiement) est géré automatiquement par la CI/CD.
+
+---
+
+## Partie 4 — Pipeline de release complet
+
+### Question 7 : Décrivez le pipeline de release complet, du commit au déploiement. Combien de workflows sont impliqués et quel est leur rôle ?
+
+Le pipeline complet de release implique **2 workflows** distincts :
+
+1. **Workflow de Qualité / Intégration Continue (`ci.yml`) :**
+   * **Déclenchement :** À chaque push sur n'importe quelle branche ou Pull Request.
+   * **Rôle :** Exécuter les vérifications de qualité de code (Black, Ruff), de sécurité (Bandit, Semgrep, pip-audit) et lancer les tests unitaires/de couverture. Il garantit que le code proposé est stable et sécurisé.
+2. **Workflow de Release / Déploiement Continu (`release.yml`) :**
+   * **Déclenchement :** À chaque push sur la branche principale `main`.
+   * **Rôle :**
+     * Exécuter `release-please-action` pour détecter les Conventional Commits.
+     * Créer/mettre à jour la Pull Request de release proposant le bump de version et le changelog.
+     * Une fois cette PR de release mergée par un humain, le workflow crée automatiquement le tag de version Git (ex: `v1.1.0`) et la release GitHub.
+     * Suite à la création de cette release, il exécute le job `deploy-release` pour s'authentifier sur GCP, construire l'image Docker multi-stage taggée avec le tag SemVer exact, la pousser sur Artifact Registry et la déployer sur Cloud Run.
+
+---
+
+### Question 8 : Quelle est la différence entre déployer avec github.sha (TP5) et déployer avec un tag de version SemVer (ce TP) ? Quand utiliser chacun ?
+
+* **Déployer avec `github.sha` :**
+   * *Principe :* Chaque commit sur `main` compile et déploie immédiatement une image unique taggée par son hash SHA.
+   * *Quand l'utiliser :* Idéal pour le développement continu et le staging rapide afin de tester en continu le code dès qu'il est poussé.
+* **Déployer avec un tag de version SemVer :**
+   * *Principe :* L'image de production n'est générée et déployée que lorsqu'une version officielle et validée (ex: `v1.1.0`) est créée par fusion de la PR de release.
+   * *Quand l'utiliser :* C'est la bonne pratique absolue en production (environnement de Release) car elle garantit que seuls les incréments stables et explicitement validés par l'équipe sont mis en production, facilitant l'identification des versions en cours et la gestion des rollbacks.
+
+---
+
+### Question 9 : Pourquoi le principe d'immutabilité des artefacts est-il important ? Que se passe-t-il si on écrase un tag Docker existant ?
+
+* **Importance de l'immutabilité :** L'immutabilité garantit qu'un artefact (par exemple l'image `v1.0.0`) ne changera plus jamais une fois publié. Cela assure la reproductibilité et la prédictibilité absolue des déploiements.
+* **Si on écrase un tag existant (ex: repousser une nouvelle version sous le tag `v1.0.0` existant) :**
+   * Le déploiement d'un nouveau conteneur tirera une image différente de celle qui a été testée et validée à l'origine sous ce tag.
+   * Il devient impossible de savoir exactement quel code tourne en production.
+   * Le rollback vers une version stable connue devient impossible ou corrompu, ce qui compromet gravement la fiabilité et la sécurité de l'infrastructure.
+
+---
+
+## Partie 5 — Recherche autonome
+
+### Question 10 : Analyse des releases d'un projet open source (FastAPI)
+
+Pour cette analyse, nous avons choisi le projet populaire **FastAPI**.
+* **Lien vers la page Releases :** [https://github.com/fastapi/fastapi/releases](https://github.com/fastapi/fastapi/releases)
+* **Analyse des 5 dernières versions (au mois de juin 2026) :**
+  * `0.138.1` (PATCH) : Résout des bugs mineurs et des avertissements.
+  * `0.138.0` (MINOR) : Ajoute de nouvelles fonctionnalités et met à jour des composants internes de routage rétrocompatibles.
+  * `0.137.2` (PATCH) : Résout un correctif de sécurité et met à jour des dépendances.
+  * `0.137.1` (PATCH) : Corrige des bugs d'intégration de typage.
+  * `0.137.0` (MINOR) : Ajout de fonctionnalités de validation de schémas.
+* **Tags et SemVer :** Oui, les versions de FastAPI suivent strictement le standard SemVer (bien que le numéro de version majeure reste à `0` pour indiquer que le framework continue d'évoluer, les composants mineurs et patchs suivent les règles standards).
+* **Automatisation et Outils :** FastAPI utilise des scripts d'automatisation personnalisés combinés avec des GitHub Actions pour générer le changelog à partir des labels des PRs fusionnées, et automatiser les releases sur GitHub et la publication des paquets sur PyPI.
