@@ -41,3 +41,8 @@ def add(a, b):
 @app.route("/about")
 def about():
     return jsonify({"app": "Mon projet Flask", "version": "1.0"})
+
+
+@app.route("/version")
+def version():
+    return jsonify({"version": "1.1.0"})

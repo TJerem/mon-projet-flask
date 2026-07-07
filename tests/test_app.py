@@ -189,3 +189,8 @@ def test_security_headers(client):
     assert response.headers.get("X-Frame-Options") == "DENY"
     assert response.headers.get("Content-Security-Policy") == "default-src 'self'"
     assert response.headers.get("X-Content-Type-Options") == "nosniff"
+
+
+def test_version(client):
+    response = client.get("/version")
+    assert response.status_code == 200
