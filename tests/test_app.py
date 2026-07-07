@@ -177,3 +177,15 @@ def test_multiple_slashes(client):
     # Test avec trailing slash sur une route existante - Flask est strict sur les slashes
     response = client.get("/health/")
     assert response.status_code == 404
+
+
+def test_security_headers(client):
+    response = client.get("/")
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert response.headers.get("Content-Security-Policy") == "default-src 'self'"
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
+
+    response = client.get("/health")
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert response.headers.get("Content-Security-Policy") == "default-src 'self'"
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
