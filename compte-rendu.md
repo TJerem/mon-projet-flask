@@ -1,3 +1,330 @@
+# Compte-Rendu de TP 1 — Découverte de Git
+
+---
+
+## Partie 1 — Concepts de base et commandes de suivi
+
+### Question 1 : Que contient le répertoire .git/ ? À quoi sert-il ?
+
+Le répertoire `.git/` contient l'ensemble des fichiers de configuration, d'historique de commits, de métadonnées et de base de données d'objets (commits, blobs, trees, tags) nécessaires à la gestion de version locale de notre projet.
+Il contient notamment :
+*   `config` : La configuration locale du dépôt (URL distante, branches suivies, etc.).
+*   `hooks/` : Scripts de personnalisation exécutés lors de certaines actions (pre-commit, pre-push, etc.).
+*   `info/exclude` : Fichier permettant d'exclure localement certains fichiers sans avoir à les ajouter au `.gitignore`.
+*   `objects/` : La base de données de contenu contenant tous les commits, arbres de fichiers (trees) et fichiers zippés (blobs).
+*   `refs/` : Les pointeurs vers les commits des branches locales (`heads`), distantes (`remotes`) et des tags (`tags`).
+
+---
+
+### Question 2 : Quelle est la différence entre un fichier untracked, staged et committed ?
+
+*   **Fichier `untracked` (non suivi) :** Le fichier existe dans votre répertoire de travail local, mais Git ne le suit pas encore. Aucun historique n'est enregistré pour ce fichier.
+*   **Fichier `staged` (indexé) :** Le fichier a été préparé en vue d'être inclus dans le prochain commit (via la commande `git add`). Les modifications actuelles sont enregistrées dans la zone d'index.
+*   **Fichier `committed` (enregistré) :** Les modifications présentes dans la zone d'index ont été validées et sauvegardées de manière permanente dans la base de données locale de Git (via `git commit`). Le fichier dispose maintenant d'un point dans l'historique.
+
+---
+
+### Question 3 : Quelle est la différence entre git diff et git diff --staged ? À quel moment utiliseriez-vous chacune ?
+
+*   **`git diff` :** Compare les fichiers du répertoire de travail actuel avec la zone d'index (`staged`).
+    *   *Quand l'utiliser :* Pour examiner les modifications en cours d'écriture avant de les préparer via un `git add`.
+*   **`git diff --staged` (ou `--cached`) :** Compare la zone d'index (`staged`) avec le tout dernier commit (`HEAD`).
+    *   *Quand l'utiliser :* Pour vérifier exactement quelles modifications ont été indexées et s'apprêtent à être enregistrées par le prochain `git commit`.
+
+---
+
+### Question 4 : Quelle est la différence entre git revert et git reset ? Dans quel cas utiliser l'un ou l'autre ?
+
+*   **`git revert` :** Crée un tout nouveau commit qui applique les modifications inverses d'un commit ciblé. Il n'altère pas l'historique existant.
+    *   *Quand l'utiliser :* Idéal lorsque l'on travaille sur une branche partagée ou publique (comme `main`), car cela préserve l'historique sans perturber les autres collaborateurs.
+*   **`git reset` :** Déplace le pointeur de branche (`HEAD`) vers un commit précédent, supprimant ou déplaçant les commits suivants selon le mode (`--soft`, `--mixed`, `--hard`).
+    *   *Quand l'utiliser :* À utiliser sur des branches locales privées avant de les publier, pour nettoyer ou annuler des commits ratés. `--hard` est à manipuler avec prudence car il supprime définitivement les modifications du répertoire de travail.
+
+---
+
+## Partie 2 — Branches et Fusions
+
+### Question 5 : Qu'est-ce qu'un fast-forward merge ? Dans quel cas Git effectue-t-il un fast-forward plutôt qu'un merge commit ?
+
+*   **Fast-forward merge :** Mode de fusion rapide dans lequel Git déplace simplement le pointeur de la branche actuelle directement vers le commit le plus récent de la branche fusionnée, sans créer de commit de fusion (merge commit) supplémentaire.
+*   **Quand se produit-il :** Lorsque la branche à fusionner a été créée à partir du même commit que la branche cible (ex: `main`), et qu'aucun autre commit n'a été ajouté sur la branche cible depuis cette séparation. S'il y a eu de nouvelles modifications sur la branche cible, Git effectuera un merge commit à la place.
+
+---
+
+### Question 6 : Pourquoi est-il recommandé de supprimer les branches une fois fusionnées ? Quelle différence entre -d et -D ?
+
+*   **Pourquoi supprimer :** Pour maintenir le dépôt propre, lisible et éviter d'accumuler des branches obsolètes qui surchargent l'historique et compliquent la maintenance.
+*   **Différence entre `-d` et `-D` :**
+    *   `git branch -d` (option sûre) : Supprime la branche uniquement si elle a déjà été entièrement fusionnée dans la branche parente.
+    *   `git branch -D` (option forcée) : Supprime la branche de force sans vérifier son statut de fusion, utile pour abandonner des branches de fonctionnalités ratées.
+
+---
+
+### Question 7 : Décrivez en vos propres mots ce qu'est un conflit Git, pourquoi il survient, et quelles sont les étapes pour le résoudre.
+
+*   **Qu'est-ce qu'un conflit Git :** C'est une situation où Git est incapable de fusionner automatiquement deux versions différentes d'un fichier et demande l'arbitrage d'un humain.
+*   **Pourquoi survient-il :** Il survient lorsque deux branches modifient la même ligne d'un même fichier, ou lorsqu'un fichier est modifié sur une branche et supprimé sur l'autre avant la fusion.
+*   **Étapes pour le résoudre :**
+    1. Ouvrir le fichier en conflit pour identifier les marqueurs de conflit (`<<<<<<< HEAD`, `=======`, `>>>>>>>`).
+    2. Utiliser un éditeur ou un outil de diff pour choisir quelles modifications conserver (ou combiner les deux).
+    3. Supprimer les marqueurs de conflit.
+    4. Marquer le conflit comme résolu en ajoutant le fichier à la zone d'index via `git add <fichier>`.
+    5. Finaliser la fusion en exécutant `git commit`.
+
+---
+
+## Partie 3 — Collaboration et Gestion de projet
+
+### Question 8 : Quelle est la différence entre git fetch et git pull ? Dans quel cas préférer l'un à l'autre ?
+
+*   **`git fetch` :** Récupère les métadonnées et les nouveaux commits du dépôt distant vers le dépôt local, sans modifier vos branches de travail actuelles.
+    *   *Quand l'utiliser :* Pour inspecter les modifications distantes de vos collaborateurs avant de décider de les intégrer, évitant ainsi les conflits inattendus.
+*   **`git pull` :** Récupère les commits distants (équivalent de `git fetch`) et les fusionne immédiatement dans votre branche de travail locale actuelle (équivalent de `git merge`).
+    *   *Quand l'utiliser :* Lorsque vous savez que votre branche locale est propre et que vous souhaitez simplement mettre à jour votre branche de travail en y fusionnant le travail distant directement.
+
+---
+
+### Question 9 : Quel est l'intérêt d'utiliser des Pull Requests plutôt que de pousser directement sur main ? Quels éléments vérifiez vous lors d'une code review ?
+
+*   **Intérêts des Pull Requests (PR) :**
+    *   **Sécurité et stabilité :** Protège la branche `main` contre l'introduction accidentelle de bugs ou de régressions qui casseraient l'application en production.
+    *   **Code Review :** Permet la discussion, le partage de connaissances et la relecture de code par les pairs avant intégration.
+    *   **CI/CD :** Permet de déclencher automatiquement les tests et validations de qualité de code sur la branche de fonctionnalité avant fusion.
+*   **Éléments à vérifier lors d'une Code Review :**
+    *   Le code résout-il correctement le problème ou implémente-t-il bien le besoin demandé ?
+    *   Le style et les normes de codage (nommage, formatage) sont-ils respectés ?
+    *   Le code contient-il des failles de sécurité potentielles ou des secrets en clair ?
+    *   Des tests unitaires appropriés ont-ils été ajoutés et couvrent-ils bien le nouveau code ?
+
+---
+
+### Question 10 : Pourquoi est-il important de ne pas versionner certains fichiers ? Donnez 3 exemples de fichiers à exclure et expliquez pourquoi pour chacun.
+
+*   **Pourquoi exclure certains fichiers :** Pour éviter de pousser des informations sensibles (secrets), de polluer le dépôt avec des fichiers générés temporairement ou d'introduire des fichiers volumineux qui ralentissent le dépôt et diffèrent selon la machine du développeur.
+*   **3 exemples à exclure :**
+    1.  **Fichiers de secrets / configuration locale (ex: `.env`) :** Contiennent des mots de passe, clés d'API ou identifiants de base de données. Les committer poserait de graves risques de sécurité.
+    2.  **Environnements virtuels (ex: `venv/`, `.venv/`) :** Contiennent des milliers de dépendances installées localement. Ils n'ont pas besoin d'être versionnés car ils peuvent être réinstallés via le fichier `requirements.txt`.
+    3.  **Fichiers temporaires ou compilés (ex: `__pycache__/`, `.pyc`, `.pytest_cache/`) :** Fichiers générés automatiquement par l'interpréteur Python ou les outils de test, spécifiques à l'exécution courante, provoquant d'inutiles conflits de fusion s'ils sont versionnés.
+
+---
+
+# Compte-Rendu de TP 2 — Intégration Continue (CI)
+
+---
+
+## Partie 1 — Premiers pas avec GitHub Actions
+
+### Question 1 : Décrivez la structure du fichier ci.yml : que signifient on, jobs, runs-on, steps et uses ?
+
+*   **`on` :** Définit les déclencheurs (triggers) du workflow (ex: push ou pull_request sur une branche spécifique).
+*   **`jobs` :** Regroupe les tâches indépendantes exécutées par le workflow. Par défaut, ils s'exécutent en parallèle, mais on peut les lier avec `needs`.
+*   **`runs-on` :** Spécifie le type de système d'exploitation et d'environnement de la machine virtuelle hébergeant le job (ex: `ubuntu-latest`).
+*   **`steps` :** Définit la séquence d'instructions exécutées séquentiellement au sein du job (lancement de scripts shell via `run` ou appel d'actions prêtes à l'emploi via `uses`).
+*   **`uses` :** Permet d'appeler et d'exécuter une action prédéfinie et partagée (souvent hébergée dans la marketplace GitHub), évitant d'avoir à réécrire du code complexe.
+
+---
+
+### Question 2 : Expliquez le rôle de la fixture client dans les tests Flask. Pourquoi utilise-t-on app.test_client() plutôt que de lancer le serveur ?
+
+*   **Rôle de `client` :** Permet d'émuler un client HTTP virtuel pour envoyer des requêtes (GET, POST, etc.) vers l'application Flask et tester les réponses.
+*   **Pourquoi `app.test_client()` :**
+    *   **Rapidité :** Ne nécessite pas d'ouvrir de vrais ports réseau ni de démarrer un serveur web complet, ce qui accélère l'exécution des tests.
+    *   **Isolation :** Évite les conflits de port si d'autres processus ou tests s'exécutent simultanément.
+    *   **Débogage immédiat :** Les erreurs ou exceptions levées durant le test remontent directement dans la console d'exécution.
+
+---
+
+### Question 3 : Pourquoi est-il important de tester localement avant de pousser ? Que se passe-t-il si un test échoue dans la CI ?
+
+*   **Importance des tests locaux :** Permet de corriger immédiatement les erreurs sur son poste en quelques secondes, évitant de gaspiller les ressources et le temps de calcul de la CI. Cela évite également de bloquer l'intégration pour les autres développeurs de l'équipe avec un code cassé.
+*   **Si un test échoue dans la CI :** Le pipeline s'arrête immédiatement et le commit ou la Pull Request est marqué d'une croix rouge, interdisant toute fusion (si la branche est protégée).
+
+---
+
+### Question 4 : Qu'est-ce qu'un artefact GitHub Actions ? Donnez 3 exemples d'artefacts utiles.
+
+*   **Artefact :** Un fichier ou un dossier généré durant l'exécution d'un workflow, archivé et stocké de manière persistante sur les serveurs de GitHub pour être téléchargé ou utilisé par d'autres jobs.
+*   **3 exemples d'artefacts utiles :**
+    1.  **Rapports de test / couverture de code :** (ex: rapport HTML de pytest-cov pour auditer visuellement la couverture).
+    2.  **Fichiers de build compilés :** (ex: fichiers binaires, paquets `.whl` ou dossiers `dist/`).
+    3.  **Logs et Dumps de mémoire :** Utiles pour diagnostiquer les plantages de conteneurs ou d'applications.
+
+---
+
+### Question 5 : Qu'est-ce que la couverture de code ? Pourquoi 100% n'est pas toujours souhaitable ?
+
+*   **Couverture de code :** Un indicateur (exprimé en %) mesurant la proportion du code source (nombre de lignes ou de branches) exécutée lors du lancement des tests unitaires.
+*   **Pourquoi 100% n'est pas toujours souhaitable :**
+    *   **Faux sentiment de sécurité :** Avoir 100% de couverture montre que le code est exécuté, mais ne garantit pas que les assertions sont logiquement correctes ni que les cas limites (edge cases) ou bugs aux limites ont été testés.
+    *   **Coût d'écriture et de maintenance élevé :** Écrire des tests pour couvrir des portions de code triviales ou peu risquées consomme un temps précieux pour un gain de fiabilité très faible.
+    *   **Sur-spécification :** Peut inciter à tester l'implémentation plutôt que le comportement attendu de l'application.
+
+---
+
+### Question 6 : Quel est le rôle d'un linter ? Pourquoi l'exécuter avant les tests dans le pipeline ?
+
+*   **Rôle d'un linter :** Analyser statiquement le code sans l'exécuter pour y repérer les erreurs de syntaxe, les variables inutilisées, les imports manquants ou les écarts par rapport aux conventions de style.
+*   **Pourquoi l'exécuter avant les tests :** Parce que l'analyse d'un linter est extrêmement rapide (quelques millisecondes). S'il y a un défaut évident de mise en page ou de syntaxe, le pipeline échoue immédiatement, évitant de perdre du temps à lancer la suite complète des tests unitaires ou d'intégration qui est plus lourde et plus lente.
+
+---
+
+### Question 7 : Comment fonctionne le cache dans GitHub Actions ? Que se passe-t-il quand requirements.txt change ?
+
+*   **Fonctionnement du cache :** GitHub Actions utilise une clé unique pour enregistrer et restaurer des dossiers de dépendances (comme le dossier pip). Si un job trouve une correspondance de clé exacte, il restaure le dossier instantanément sans le retélécharger.
+*   **Quand `requirements.txt` change :** La clé de cache, générée à partir du hash de `requirements.txt` (ex: `pip-${{ hashFiles('requirements.txt') }}`), change également. La recherche de cache échoue (cache miss), le pipeline télécharge et installe les nouvelles dépendances depuis Internet, puis enregistre un nouveau cache associé à cette nouvelle clé.
+
+---
+
+### Question 8 : Comparez les runners GitHub-hosted et self-hosted : avantages, inconvénients, et dans quel cas utiliser chacun.
+
+| Type de Runner | Avantages | Inconvénients | Cas d'usage idéal |
+| :--- | :--- | :--- | :--- |
+| **GitHub-hosted** (Hébergé par GitHub) | Clé en main, aucune maintenance d'infrastructure, sécurité élevée (machines virtuelles jetables et isolées), large choix d'OS. | Temps d'exécution limité (crédits gratuits limités), pas d'accès réseau local privé, performances standards. | Projets standards, petites équipes ou projets open source cherchant la simplicité. |
+| **Self-hosted** (Hébergé par vous) | Contrôle total sur le matériel et l'OS, accès aux ressources réseau privées, performances sur-mesure, économies d'échelle. | Maintenance de l'infrastructure à votre charge, sécurité à gérer (risques de persistance si des PRs publiques s'exécutent dessus). | Entreprises avec contraintes de sécurité strictes, accès à un réseau interne ou besoins matériels élevés (ex: GPU). |
+
+---
+
+### Question 9 : Décrivez le workflow complet qu'un développeur doit suivre pour intégrer du code quand la branche main est protégée.
+
+1.  Créer une branche de fonctionnalité locale à partir de la branche stable `main`.
+2.  Écrire le code et committer localement.
+3.  Pousser la branche de fonctionnalité sur le dépôt distant.
+4.  Ouvrir une Pull Request (PR) vers la branche `main` sur GitHub.
+5.  Le pipeline d'Intégration Continue (CI) se lance automatiquement sur la PR.
+6.  Une relecture de code (code review) est effectuée par au moins un pair.
+7.  Si le pipeline CI est vert et la PR validée par les relecteurs, le merge est autorisé.
+8.  La PR est fusionnée dans `main`, et la branche de fonctionnalité distante est supprimée.
+
+---
+
+### Question 10 : Quelle action avez-vous trouvée et intégrée ? Expliquez son rôle, montrez la configuration YAML que vous avez ajoutée, et décrivez le résultat obtenu. Indiquez le lien vers la page de l'action dans la marketplace.
+
+*   **Action intégrée :** Gitleaks Action (`gitleaks/gitleaks-action@v2`).
+*   **Rôle :** Scan l'historique des commits pour détecter la présence de secrets codés en dur (clés API, mots de passe, tokens de connexion, etc.) et empêcher leur publication accidentelle.
+*   **Configuration YAML ajoutée dans `ci.yml` :**
+    ```yaml
+    - name: Detection de secrets
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    ```
+*   **Résultat obtenu :** Le scanner s'exécute avec succès lors de chaque push, inspecte tous les commits et bloque l'intégration continue en cas de découverte d'informations d'identification exposées.
+*   **Lien vers la marketplace :** [Gitleaks Action sur GitHub Marketplace](https://github.com/marketplace/actions/gitleaks-action)
+
+---
+
+# Compte-Rendu de TP 3 — Qualité de code et DevSecOps
+
+---
+
+## Partie 1 — Outils de qualité de code (Linters & Formaters)
+
+### Question 1 : Quelle est la différence entre un linter et un formatter ? Donnez un exemple de chaque en Python.
+
+*   **Linter :** Analyse statiquement le code pour repérer les erreurs de syntaxe, les bugs potentiels, les variables inutilisées et s'assurer du respect des conventions de style.
+    *   *Exemple en Python :* `flake8` ou `ruff check`.
+*   **Formatter :** Modifie automatiquement la mise en page et l'indentation du code source pour le rendre conforme à un standard défini (ex: PEP 8).
+    *   *Exemple en Python :* `black` ou `ruff format`.
+
+---
+
+### Question 2 : Pourquoi utilise-t-on --check dans la CI plutôt que de laisser la CI formater le code directement ?
+
+Pour garantir que les développeurs formattent leur code en local avant de committer. Si la CI reformatait elle-même le code, le dépôt distant contiendrait des modifications automatiques non présentes sur les postes locaux des développeurs, créant des désynchronisations et des conflits. L'argument `--check` permet de valider la conformité du code et de rejeter la PR si le formatage n'a pas été fait.
+
+---
+
+### Question 3 : Quels avantages a Ruff par rapport à flake8 ? Pourquoi le fichier pyproject.toml est-il préférable à des arguments en ligne de commande ?
+
+*   **Avantages de Ruff :**
+    *   **Performance :** Écrit en Rust, Ruff est jusqu'à 100 fois plus rapide que Flake8.
+    *   **Tout-en-un :** Il remplace Flake8, Black, isort, bandit (partiellement), pyupgrade, etc. en un seul outil.
+    *   **Intégration native :** Gère le formatage et le linting nativement sans dépendances externes.
+*   **Pourquoi `pyproject.toml` :** Il centralise la configuration des outils de développement Python de manière standardisée et lisible. Cela assure la reproductibilité parfaite des validations entre la machine de chaque développeur et le serveur de CI.
+
+---
+
+## Partie 2 — Analyse de sécurité statique (SAST)
+
+### Question 4 : Quelle est la différence entre Bandit et Semgrep ? Dans quel cas utiliseriez-vous l'un ou l'autre ?
+
+*   **Bandit :** Outil SAST exclusivement spécialisé dans la recherche de failles de sécurité communes dans le code Python (injections SQL, utilisation de fonctions non sécurisées comme `eval()`, secrets en clair).
+*   **Semgrep :** Outil SAST polyvalent et multi-langages (plus de 30 langages supportés) qui permet d'utiliser des règles personnalisées écrites sous forme de patrons syntaxiques simples pour détecter des bugs logiques ou de sécurité.
+*   **Quand utiliser chacun :** Utiliser `Bandit` comme une validation légère et robuste dédiée aux projets purement Python. Utiliser `Semgrep` pour les projets multi-langages (Python + JavaScript + YAML de déploiement) ou lorsque l'entreprise souhaite appliquer ses propres règles et conventions personnalisées de sécurité.
+
+---
+
+### Question 5 : Qu'est-ce qu'un analyse statique ? En quoi diffère-t-elle des tests unitaires ?
+
+*   **Analyse statique :** Analyse la structure du code source et de ses dépendances "à froid", sans exécuter l'application, afin d'identifier des bugs potentiels, des vulnérabilités ou des défauts de conformité.
+*   **Tests unitaires :** Exécutent l'application "à chaud" en lui injectant des données d'entrée spécifiques et en vérifiant que le comportement fonctionnel et les résultats obtenus correspondent aux attentes (via des assertions).
+
+---
+
+## Partie 3 — Automatisation locale et pre-commit hooks
+
+### Question 6 : Quel est le rôle des pre-commit hooks par rapport à la CI ? Pourquoi utiliser les deux ?
+
+*   **Rôle des pre-commit hooks :** Bloquer la création de commits en local si le code ne respecte pas les critères de qualité (formatage, linting).
+*   **Pourquoi utiliser les deux :** Le pre-commit offre un retour instantané et évite de polluer l'historique Git ou de faire tourner inutilement la CI pour des erreurs triviales. La CI sert de garde-fou final et inviolable pour garantir que personne n'a contourné les règles locales avant la fusion du code.
+
+---
+
+### Question 7 : Un collègue fait un git commit --no-verify pour contourner les pre-commit hooks. Est-ce un problème ? Pourquoi ?
+
+Oui, c'est un problème. Contourner les hooks via `--no-verify` permet d'introduire du code non conforme (mauvais formatage, erreurs de linter, vulnérabilités de sécurité) dans le dépôt distant. Même si la CI bloquera ensuite la fusion, cela pollue l'historique des commits locaux et fait perdre du temps à l'équipe et à l'infrastructure de CI.
+
+---
+
+## Partie 4 — Quality Gate et pipeline final
+
+### Question 8 : Qu'est-ce qu'un Quality Gate ? Donnez 3 exemples de conditions qu'on pourrait y mettre.
+
+*   **Quality Gate (Barrière de Qualité) :** Un ensemble de critères d'acceptation et de seuils automatiques que le code doit obligatoirement franchir pour être autorisé à être fusionné ou déployé.
+*   **3 exemples de conditions :**
+    1.  Taux de couverture de code par les tests unitaires supérieur ou égal à 70%.
+    2.  Aucune vulnérabilité de sécurité de sévérité élevée ou critique détectée.
+    3.  Nombre de bugs de type "Blocker" ou "Critical" égal à zéro.
+
+---
+
+### Question 9 : Décrivez l'ordre des vérifications dans votre pipeline final et expliquez pourquoi cet ordre est important.
+
+L'ordre des vérifications dans le pipeline `ci.yml` est le suivant :
+1.  **Checkout du code :** Indispensable pour récupérer les fichiers à analyser.
+2.  **Configuration de Python & Restauration du cache pip :** Prépare l'environnement et accélère l'étape d'installation des dépendances.
+3.  **Installation des dépendances :** Nécessaire car les tests et outils de linting en dépendent.
+4.  **Linting (Ruff) & Formatage (Black) :** Vérifications syntaxiques très rapides. Si le code est mal écrit, le pipeline s'arrête immédiatement avant de lancer les analyses plus lentes.
+5.  **Scan de vulnérabilités (Bandit & Semgrep) :** Détecte les failles de sécurité.
+6.  **Tests unitaires + couverture (Pytest) :** Étape la plus lente. On n'exécute les tests unitaires que si le code a été validé comme propre et sécurisé.
+7.  **Sauvegarde du rapport de couverture :** Archivage final des résultats.
+
+---
+
+### Question 10 : Décrivez ce que vous voyez sur le tableau de bord SonarCloud de votre projet. Quel est le résultat du Quality Gate ? Quels problèmes ont été détectés ?
+
+*   **Résultat du Quality Gate :** Le Quality Gate est marqué comme **Passed** (validé).
+*   **Métriques observées :**
+    *   **5 Open issues** (anomalies ou odeurs de code de faible importance).
+    *   **14% de couverture** par les tests unitaires (seuil inférieur à l'objectif de 70% ciblé dans le TP).
+    *   **0 vulnérabilité de sécurité** détectée.
+    *   **1 Security Hotspot** (point d'attention de sécurité).
+    *   **0 duplication** de code.
+*   **Problèmes détectés :** Des avertissements concernant la désactivation de la protection CSRF et l'absence de spécification explicite des méthodes HTTP sur certaines routes Flask.
+
+---
+
+### Question 11 : Comparez SonarCloud avec les outils locaux (Bandit, Semgrep, Ruff). Quels sont les avantages d'un outil centralisé comme SonarCloud en entreprise ?
+
+*   **Outils locaux (Bandit, Semgrep, Ruff) :** Offrent une exécution très rapide en local pour un feedback instantané durant le développement, mais manquent de vision à long terme et d'historique.
+*   **SonarCloud (Outil centralisé) :**
+    *   **Visibilité globale :** Permet aux managers et tech leads de suivre la santé globale de l'ensemble des dépôts de l'entreprise sur un tableau de bord unique.
+    *   **Historique et tendances :** Permet de suivre l'évolution de la dette technique et de la couverture au fil du temps.
+    *   **Standardisation :** Centralise et harmonise les barrières de qualité (Quality Gates) à l'échelle de l'organisation.
+    *   **Prise de décision :** Fournit des rapports détaillés facilitant l'évaluation des risques avant chaque livraison en production.
+
+---
+
 # Compte-Rendu de TP 4 — Sécurité dans l'usine logicielle
 
 #### Question 11 : Description de la CVE trouvée
