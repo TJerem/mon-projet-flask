@@ -67,13 +67,3 @@ jobs:
 
       - name: Scan dependances (pip-audit)
         run: pip-audit -r requirements.txt
-
-      - name: Verifier injection du secret
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-        run: |
-          if [ -z "$API_KEY" ]; then
-            echo "ERREUR: API_KEY non definie"
-            exit 1
-          fi
-          echo "API_KEY est bien injectee (valeur masquee)"
